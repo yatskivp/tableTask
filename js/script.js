@@ -33,7 +33,7 @@
         },
         {
             name: 'Andrii',
-            lastName: 'Hun'ka',
+            lastName: "Hun'ka",
             img: 'https://cdn.pixabay.com/photo/2017/01/06/19/15/soap-bubble-1958650_960_720.jpg',
             coverImg: 'http://i.dailymail.co.uk/i/pix/2017/01/16/20/332EE38400000578-4125738-image-a-132_1484600112489.jpg',
             email: 'andriyggg@gmail.com',
