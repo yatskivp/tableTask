@@ -160,5 +160,273 @@
             skills: ['JavaScript', 'HTML', 'CSS']
         }
     ];
+    
+    var divRow = document.createElement('div'),
+        container = document.getElementById('container');
+    divRow.className = 'row';
+    container.appendChild(divRow);//Додаємо div з класом row до контейнера (щоб юзати css бутстрапа)
 
+//////////////////////GENERATE TABLE////////////////////////
+    var table = document.createElement('table'),
+        tbody = document.createElement('tbody'),
+        thead = document.createElement('thead'),
+        rows = tbody.rows;
+    table.className = 'table table-hover';
+    thead.innerHTML = '<tr><th class = "glyphicon-sort">Student</th><th class = "glyphicon-sort">email</th><th>Profile picture</th><th>Skils</th><th>controls</th></tr>';
+    table.appendChild(thead);
+    table.appendChild(tbody);
+
+    var addTd = function(el,data){//функція, що додаватиме заповнені TD в TR
+        var td = document.createElement('td');
+        td.innerHTML = data;
+        el.appendChild(td);
+    }
+
+    var fullFillTable = function(el,obj){//функція, що заповнюватиме TD під кожним хедером
+        addTd(el,obj.name+' '+obj.lastName);
+        addTd(el,obj.email);
+        addTd(el,'<img src='+obj.img+' alt="No image">');
+        addTd(el,obj.skills);
+        addTd(el,'<button class="glyphicon glyphicon-edit">edit</batton><button class="glyphicon glyphicon-trash">remove</batton>');
+    }
+
+    if(students.length){//перевіряємо, чи масив наповнений
+        students.forEach(function(item){
+            var tr = document.createElement('tr');
+            fullFillTable(tr,item);
+            tbody.appendChild(tr);
+        })
+    }
+    
+    divRow.appendChild(table);
+///////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////GANERATE FORM////////////////////////////////////////////////
+var form = document.createElement('form');
+var names = {'name':'text',
+            'last name':'text',
+            'email':'email',
+            'profile picture':'text',
+            'skills':'text',
+            'save':'submit',
+            'cancel':'button'};
+var inputCreate = function(type,data,el){//функція, що формуватиме структуру форми
+    var input = document.createElement('input'),
+        label = document.createElement('label'),
+        p = document.createElement('p');
+    input.type = type;
+    input.className = 'col-xs-4';
+    label.setAttribute('for',data)
+    label.innerHTML = data[0].toUpperCase()+data.slice(1);
+    label.className = 'col-xs-2';
+    if(type == 'button' || type == 'submit'){
+        input.value = data;
+        input.className = 'col-xs-1 col-xs-offset-2';
+        el.appendChild(input);
+    }else{
+        if(data != 'skills'){
+            input.required = true;
+        }
+        p.appendChild(label);
+        p.appendChild(input);
+        el.appendChild(p);
+    }    
+}
+for(var key in names){
+    inputCreate(names[key],key,form);
+}
+divRow.insertBefore(form,table);
+/////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////ONCLICK EVENT/////////////////////////////////////////////
+tbody.onclick = function(e){
+    var target = e.target;
+    
+    ///////////////////////EDIT BUTTON//////////////////////////////////////////////////        
+    while(target.tagName !='tbody'){
+        if(target.tagName == 'TR' && e.target.classList.contains('glyphicon-edit')){//шукаємо TR, в якому натиснуто edit (клікнутий тег містить клас glyphicon-edit)
+            form.classList.add('edit');//додаємо формі класс edit, щоб бачити чи це редагування юзера, чи стоврення нового
+            var inputs = form.querySelectorAll('input');//в input'и форми вставляємо значення TD таблиці
+            inputs[0].value = target.cells[0].innerHTML.split(' ')[0];
+            inputs[1].value = target.cells[0].innerHTML.split(' ')[1];
+            inputs[2].setAttribute('value',target.cells[1].innerHTML);// тут атрибут, щоб потім використати влативіть, що при зміні проперті input.value, атрибут не мінятиметься 
+            inputs[3].value = target.cells[2].firstChild.src;
+            inputs[4].value = target.cells[3].innerHTML;                  
+            return
+        }
+        /////////////////////REMOVE BUTTON//////////////////////////////////////////////////
+        if(target.tagName == 'TR' && e.target.classList.contains('glyphicon-trash')){//шукаємо TR, в якому натиснуто remove (клікнутий тег містить клас glyphicon-trash)
+            var delTarg = tbody.removeChild(target);// видаляємо відповідний TR з таблиці
+            ///////костиль///////////////////
+            var k = Object.keys(rows);// при таких діях, як вибір юзера і нажимання на edit, потім на remove, потім на save, мало б перезаписати юзера            
+            for(var i=0; i<k.indexOf('0'); i++){//але при виконанні рядка 255, дом-елемент видаляється, проте не видаляється об"єкт із масиву rows,відповідно далі погано відпрацьовує        
+                delete rows[k[i]];//тому я вручну видаляю ці об"єкти (може це через те, що я rows оголосив як глобальну змінну, і на наї є лінки, тому грабер і не підчищає)
+            }
+           ///////////////////////////////////            
+            form.classList.remove('edit');//видаляємо клас edit, для випадку, коли спочатку натиснули на кнопку edit, а потім на remove, відповідно юзер у формі стає новим
+            for(var i=0; i<students.length; i++){
+                if(students[i].email == delTarg.cells[1].innerHTML){//припускається, що емейл в кожного індивідуальний
+                    students.splice(i,1);//знайдений об'кт юзера видаляємо 
+                    break;
+                }
+            }      
+            return
+        }///////////////////////ALERT STUDENT///////////////////////////////////////////////
+        else if(target.tagName == 'TR'){//в іншому випадку виводимо алертом student
+            alert(target.cells[0].innerHTML+'\n'+target.cells[1].innerHTML 
+                  +'\n'+target.cells[3].innerHTML);
+            return;
+        }
+        target = target.parentElement;
+    }
+}
+/////////////////////////////////////////////////////////////////////////////////////    
+////////////////////////////////CANCEL BUTTON////////////////////////////////////////
+var cancelBtn = document.querySelector('input[value="cancel"]');
+cancelBtn.onclick = function(){
+    form.classList.remove('edit');
+    document.querySelector('input[type="email"]').setAttribute('value','');
+    form.reset();
+}
+/////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////SAVE BUTTON////////////////////////////////////////
+form.onsubmit = function(){
+        var inputs = form.querySelectorAll('input');        
+        if(!inputs[4].value.match(/^$|^[\w]+(?:,[\w]+)*$/i)){//перевіряє чи між скілами є кома+не пропускає skill1,,skill2
+            alert('Please, separate your skills by coma! Use words without space');
+            return false;
+        }
+        var user = {
+            name: inputs[0].value,
+            lastName: inputs[1].value,
+            img: inputs[3].value,
+            coverImg: inputs[3].value,
+            email: inputs[2].value,
+            skills: inputs[4].value.split(',')
+        }
+        
+        if(form.classList.contains('edit')){//якщо форма має клас edit, то шукаємо редагованого юзера в масиві students, використовуючи email, як значення атрибуту відповідного input'у
+            for(var i=0; i<students.length; i++){
+                if(students[i].email == inputs[2].getAttribute('value')){//припускається, що емейл в кожного індивідуальний
+                    students.splice(i,1,user);//знайдений об'кт юзера видаляємо і вставляємо новий 
+                    break;
+                }
+            }
+        }else{
+            students.push(user);//в іншому випадку, це новий юзер, тому його об'єкт вставляємо в кінець масиву students(або при сортуванні на відповідну позицію)
+            cancelBtn.onclick();//чистимо форму
+        }
+
+        if(sortStatusSt){//якщо список був попередньо відсортований по Student, то новий(редагований) юзер теж буде сортуватися
+            sortBySt = sortBySt == 'asc'?'desc':'asc';
+            students.sort(sortStudentsBySt());
+            sortBySt = sortBySt == 'asc'?'desc':'asc';
+        }
+        if(sortStatusEm){//якщо список був попередньо відсортований по email, то новий(редагований) юзер теж буде сортуватися
+            sortByEm = sortByEm == 'asc'?'desc':'asc';
+            students.sort(sortStudentsByEm());
+            sortByEm = sortByEm == 'asc'?'desc':'asc';
+        }
+        
+        students.forEach(function(item,i){//обновляємо значення таблиці
+            if(!rows[i]){//при додаванні нового юзера існуючих рядків в таблиці бракуватиме, тому додаємо новий, шляхом клонування 
+                rows[i] = rows[i-1].cloneNode(true);
+                tbody.appendChild(rows[i]);
+            }
+            rows[i].cells[0].innerHTML = item.name+' '+item.lastName;
+            rows[i].cells[1].innerHTML = item.email;
+            rows[i].cells[2].innerHTML = '<img src='+item.img+' alt="No image">';
+            rows[i].cells[3].innerHTML = item.skills;
+        })
+    return false                  
+}
+/////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////SORTING///////////////////////////////////////////////////
+var sortBySt = 'asc',
+    sortStatusSt = false;//індикатор,чи є сортування, чи ні
+var sortStudentsBySt = function(){
+   return  function(obj1,obj2){// функція компаратор для сортування
+        if(sortBySt == 'desc'){//вибирається, яким чином сортувати
+            var objTmp = obj1;
+            obj1 = obj2;
+            obj2 = objTmp;
+            objTmp = null;
+        }
+        if(obj1.name.toLowerCase() > obj2.name.toLowerCase()){
+			return 1
+		}
+		if(obj1.name.toLowerCase() < obj2.name.toLowerCase()){
+			return -1
+		}
+		if(obj1.name.toLowerCase() == obj2.name.toLowerCase()){
+			return (function(obj1,obj2){//якщо імена юзерів однакові, то йде сортування по lname
+				return obj1.lastName.toLowerCase() > obj2.lastName.toLowerCase()?1:-1;
+			})(obj1,obj2)
+		}
+    }
+}
+
+var sortStudentsByEm = function(){
+    return function(obj1,obj2){// функція компаратор для сортування
+        if(sortByEm == 'desc'){//вибирається, яким чином сортувати
+            var objTmp = obj1;
+            obj1 = obj2;
+            obj2 = objTmp;
+            objTmp = null;
+        }
+        return obj1.email.toLowerCase() > obj2.email.toLowerCase()?1:-1;
+    }
+}
+
+table.rows[0].firstChild.onclick = function(){// клік по хедері Student
+    sortStatusSt = true;
+    sortStatusEm = false;
+    table.rows[0].cells[1].classList.remove('glyphicon-sort-by-alphabet-alt');//видаляємо сортувальні іконки для хедера email
+    table.rows[0].cells[1].classList.remove('glyphicon-sort-by-alphabet');
+    table.rows[0].cells[1].classList.add('glyphicon-sort'); 
+    
+    students.sort(sortStudentsBySt());
+    
+    if(sortBySt=='asc'){
+        this.classList.remove('glyphicon-sort');
+        this.classList.remove('glyphicon-sort-by-alphabet-alt');
+        this.classList.add('glyphicon-sort-by-alphabet');
+    }else{
+         this.classList.remove('glyphicon-sort-by-alphabet');
+         this.classList.add('glyphicon-sort-by-alphabet-alt');
+    }
+    students.forEach(function(item,i){//обновляємо значення таблиці
+            rows[i].cells[0].innerHTML = item.name+' '+item.lastName;
+            rows[i].cells[1].innerHTML = item.email;
+            rows[i].cells[2].innerHTML = '<img src='+item.img+' alt="No image">';
+            rows[i].cells[3].innerHTML = item.skills;
+    });
+    sortBySt = sortBySt=='asc'?'desc':'asc';//міняється значення sotrBySt для наступного кліку    
+}
+
+var sortByEm = 'asc',
+    sortStatusEm = false;//індикатор,чи є сортування, чи ні
+table.rows[0].cells[1].onclick = function(){// клік по хедері email
+    sortStatusEm = true;
+    sortStatusSt = false;
+    table.rows[0].firstChild.classList.remove('glyphicon-sort-by-alphabet-alt');//видаляємо сортувальні іконки для хедера Students
+    table.rows[0].firstChild.classList.remove('glyphicon-sort-by-alphabet');
+    table.rows[0].firstChild.classList.add('glyphicon-sort');
+    
+    students.sort(sortStudentsByEm());
+
+    if(sortByEm=='asc'){
+        this.classList.remove('glyphicon-sort');
+        this.classList.remove('glyphicon-sort-by-alphabet-alt');
+        this.classList.add('glyphicon-sort-by-alphabet');
+    }else{
+         this.classList.remove('glyphicon-sort-by-alphabet');
+         this.classList.add('glyphicon-sort-by-alphabet-alt');
+    }
+    students.forEach(function(item,i){//обновляємо значення таблиці
+            rows[i].cells[0].innerHTML = item.name+' '+item.lastName;
+            rows[i].cells[1].innerHTML = item.email;
+            rows[i].cells[2].innerHTML = '<img src='+item.img+' alt="No image">';
+            rows[i].cells[3].innerHTML = item.skills;
+    });
+    sortByEm = sortByEm=='asc'?'desc':'asc';//міняється значення sotrByEm для наступного кліку   
+}
 })();

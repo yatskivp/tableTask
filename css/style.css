@@ -1,0 +1,27 @@
+div.row p{
+    padding-bottom: 30px;
+}
+form{
+    margin-top: 25px;
+}
+table.table{
+   margin-top: 75px;    
+}
+table.table>thead>tr>th{
+    font-size: 16px;
+    font-weight: bold;
+    font-family: 'Glyphicons Halflings';
+    text-align: center;
+}
+
+table.table>tbody>tr>td{
+    vertical-align: middle;
+    text-align: center;
+    max-width:100px;
+    overflow: auto
+}
+
+table>tbody>tr>td>img{
+    width: 50px;
+    height: 40px
+}
